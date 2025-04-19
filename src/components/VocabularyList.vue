@@ -470,16 +470,19 @@ onMounted(loadWords)
   align-items: center;
   margin-bottom: 1.5rem;
   gap: 2rem;
+  flex-wrap: wrap;
 }
 
 .actions {
   display: flex;
   gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .filters {
   display: flex;
   gap: 1rem;
+  width: 100%;
 }
 
 .search-wrapper {
@@ -764,18 +767,76 @@ onMounted(loadWords)
 }
 
 @media (max-width: 768px) {
+  .card-header {
+    padding: 1rem;
+  }
+
   .controls {
     flex-direction: column;
+    align-items: stretch;
     gap: 1rem;
+  }
+
+  .actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .actions .btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .filters {
     flex-direction: column;
   }
 
+  .search-wrapper {
+    width: 100%;
+  }
+
   .table {
     display: block;
     overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .table th,
+  .table td {
+    min-width: 120px;
+  }
+
+  .table td:last-child {
+    min-width: 100px;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .modal {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+  }
+}
+
+@media (max-width: 480px) {
+  .word-count {
+    text-align: center;
+  }
+
+  .select-wrapper {
+    width: 100%;
+  }
+
+  .select {
+    width: 100%;
+  }
+
+  .pagination-info {
+    width: 100%;
+    text-align: center;
   }
 }
 
