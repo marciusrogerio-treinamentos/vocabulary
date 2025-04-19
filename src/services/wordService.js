@@ -1,15 +1,4 @@
-const STORAGE_KEY = 'vocabulary_words';
-
-// Função auxiliar para obter palavras do localStorage
-const getWordsFromStorage = () => {
-  const words = localStorage.getItem(STORAGE_KEY);
-  return words ? JSON.parse(words) : [];
-};
-
-// Função auxiliar para salvar palavras no localStorage
-const saveWordsToStorage = (words) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(words));
-};
+import { supabase } from '../supabase/config';
 
 // Função para gerar um ID único
 const generateUniqueId = () => {
@@ -20,15 +9,20 @@ export const wordService = {
   // Adicionar uma nova palavra
   async addWord(wordData) {
     try {
-      const words = getWordsFromStorage();
       const newWord = {
         id: generateUniqueId(),
         ...wordData,
         created_at: new Date().toISOString()
       };
-      words.push(newWord);
-      saveWordsToStorage(words);
-      return newWord;
+      
+      const { data, error } = await supabase
+        .from('words')
+        .insert([newWord])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
     } catch (error) {
       console.error('Erro ao adicionar palavra:', error.message);
       throw error;
@@ -38,8 +32,13 @@ export const wordService = {
   // Buscar todas as palavras
   async getWords() {
     try {
-      const words = getWordsFromStorage();
-      return words.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      const { data, error } = await supabase
+        .from('words')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
     } catch (error) {
       console.error('Erro ao buscar palavras:', error.message);
       throw error;
@@ -49,18 +48,17 @@ export const wordService = {
   // Atualizar uma palavra
   async updateWord(id, wordData) {
     try {
-      const words = getWordsFromStorage();
-      const index = words.findIndex(word => word.id === id);
-      if (index === -1) throw new Error('Palavra não encontrada');
+      const { data, error } = await supabase
+        .from('words')
+        .update(wordData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error('Palavra não encontrada');
       
-      words[index] = {
-        ...words[index],
-        ...wordData,
-        id // Manter o ID original
-      };
-      
-      saveWordsToStorage(words);
-      return words[index];
+      return data;
     } catch (error) {
       console.error('Erro ao atualizar palavra:', error.message);
       throw error;
@@ -70,18 +68,12 @@ export const wordService = {
   // Deletar uma palavra
   async deleteWord(id) {
     try {
-      const words = getWordsFromStorage();
-      const wordToDelete = words.find(word => word.id === id);
-      if (!wordToDelete) {
-        throw new Error('Palavra não encontrada');
-      }
-      
-      const filteredWords = words.filter(word => word.id !== id);
-      if (filteredWords.length === words.length) {
-        throw new Error('Palavra não foi encontrada para exclusão');
-      }
-      
-      saveWordsToStorage(filteredWords);
+      const { error } = await supabase
+        .from('words')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
       return true;
     } catch (error) {
       console.error('Erro ao deletar palavra:', error.message);
@@ -92,7 +84,12 @@ export const wordService = {
   // Deletar todas as palavras
   async deleteAllWords() {
     try {
-      localStorage.removeItem(STORAGE_KEY);
+      const { error } = await supabase
+        .from('words')
+        .delete()
+        .neq('id', 'dummy'); // Deleta todas as palavras
+
+      if (error) throw error;
       return true;
     } catch (error) {
       console.error('Erro ao deletar todas as palavras:', error.message);
